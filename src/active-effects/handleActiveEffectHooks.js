@@ -1,5 +1,6 @@
 import { createActiveEffects, deleteActiveEffects, checkConcentration, toggleActiveEffects } from "./handleActiveEffects.js";
 import { createRuleElementPF2e, deleteRuleElementPF2e } from "./pf2e/handlePF2eRuleElements.js";
+import { createActiveEffectsWfrp, deleteActiveEffectsWfrp, toggleActiveEffectsWfrp } from "./wfrp4e/handleWfrp4eActiveEffects.js";
 import AAHandler from "../system-handlers/workflow-data.js";
 import { debug } from "../constants/constants.js";
 import { createRuleElementPtu, deleteRuleElementPtu } from "./ptu/handlePtuRuleElements.js";
@@ -138,6 +139,32 @@ export function registerActiveEffectHooks() {
                 if (!['condition', 'effect'].includes(item.type)) { return false; }
                 return true;
             }
+        case 'wfrp4e':
+            Hooks.on("updateActiveEffect", (data, toggle, other, userId) => {
+                if (game.settings.get("autoanimations", "disableAEAnimations")) {
+                    debug(`Active Effect Animations are Disabled`);
+                    return;
+                }
+                if (game.user.id !== userId) { return; }
+                toggleActiveEffectsWfrp(data, toggle)
+            });
+            Hooks.on("createActiveEffect", (effect, data, userId) => {
+                if (game.settings.get("autoanimations", "disableAEAnimations")) {
+                    debug(`Active Effect Animations are Disabled`);
+                    return;
+                }
+                if (game.user.id !== userId) { return; }
+                createActiveEffectsWfrp(effect)
+            });
+            Hooks.on("deleteActiveEffect", (effect, data, userId) => {
+                if (game.settings.get("autoanimations", "disableAEAnimations")) {
+                    debug(`Active Effect Animations are Disabled`);
+                    return;
+                }
+                if (game.user.id !== userId) { return; }
+                deleteActiveEffectsWfrp(effect, userId)
+            });
+            break;
         default:
             Hooks.on("updateActiveEffect", (data, toggle, other, userId) => {
                 if (game.settings.get("autoanimations", "disableAEAnimations")) {

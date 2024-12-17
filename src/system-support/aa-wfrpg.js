@@ -1,3 +1,4 @@
+import { createActiveEffects } from "../active-effects/handleActiveEffects.js";
 import { trafficCop }       from "../router/traffic-cop.js"
 import AAHandler            from "../system-handlers/workflow-data.js";
 import { debug }            from "../constants/constants.js";
@@ -77,35 +78,16 @@ export function systemHooks() {
         })
         runWarhammer(compiledData)
     });
-        
-    Hooks.on("wfrp4e:renderTokenAura", async (token, effect, userId) => {
-        if (game.user.id !== userId) { return; }
-        let item;
-        if (effect.parent.constructor.name == "ItemWfrp4e") {
-            item = effect.parent;
-        }
-        else if (effect.parent.constructor.name == "ActorWfrp4e") {
-            item = effect.sourceItem;
-        }
-        let compiledData = await getRequiredData({
-            item: item,
-            activeEffect: effect,
-            tokenId: token.id,
-            actorId: token.actor.id,
-          //  workflow: data
-        })
-        runWarhammer(compiledData)
-    });
     
     Hooks.on("createMeasuredTemplate", async (template, data, userId) => {
         if (userId !== game.user.id) { return };
-
         if (template.flags?.wfrp4e?.itemuuid) {
             const uuid = template.flags.wfrp4e.itemuuid;
             templateAnimation(await getRequiredData({itemUuid: uuid, templateData: template, workflow: template, isTemplate: true}))
-        } else if (template.flags?.wfrp4e?.effectUuid) {
-            const effectUuid = template.flags.wfrp4e.effectUuid;
-            const effect = await fromUuid(effectUuid)
+        } else if (template.flags?.wfrp4e?.effectData) {
+            const item = await fromUuid(template.flags.wfrp4e.effectData.system.sourceData.item)
+            const effect = item.effects.get(template.flags.wfrp4e.effectData._id);
+            const templateObj = game.scenes.current.templates.get(template.id);
             templateAnimation(await getRequiredData({itemUuid: effect.parent.uuid, templateData: template, workflow: template, isTemplate: true}))
         } else if (template.flags?.wfrp4e?.auraToken) {
             const effectUuid = template.flags.wfrp4e.effectUuid;
